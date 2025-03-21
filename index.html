@@ -23,7 +23,6 @@
             border: 10px solid #333;
             border-radius: 50%;
             background: white;
-            margin-bottom: 20px;
         }
 
         .hand {
@@ -64,23 +63,64 @@
             transform: translate(-50%, -50%);
         }
 
-        .time-text {
-            font-size: 24px;
+        /* Numerot kellon kehällä */
+        .numbers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .number {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: #333;
+            text-align: center;
+            line-height: 20px;
+            transform-origin: 50% 50%;
         }
+
+        /* Sijoitetaan numerot oikeisiin kohtiin */
+        .number-12 { top: 10px; left: 50%; transform: translateX(-50%); }
+        .number-1 { top: 30px; right: 70px; transform: rotate(30deg); }
+        .number-2 { top: 80px; right: 30px; transform: rotate(60deg); }
+        .number-3 { top: 50%; right: 10px; transform: translateY(-50%) rotate(90deg); }
+        .number-4 { bottom: 80px; right: 30px; transform: rotate(120deg); }
+        .number-5 { bottom: 30px; right: 70px; transform: rotate(150deg); }
+        .number-6 { bottom: 10px; left: 50%; transform: translateX(-50%) rotate(180deg); }
+        .number-7 { bottom: 30px; left: 70px; transform: rotate(210deg); }
+        .number-8 { bottom: 80px; left: 30px; transform: rotate(240deg); }
+        .number-9 { top: 50%; left: 10px; transform: translateY(-50%) rotate(270deg); }
+        .number-10 { top: 80px; left: 30px; transform: rotate(300deg); }
+        .number-11 { top: 30px; left: 70px; transform: rotate(330deg); }
     </style>
 </head>
 <body>
 
 <div class="clock">
+    <div class="numbers">
+        <div class="number number-12">12</div>
+        <div class="number number-1">1</div>
+        <div class="number number-2">2</div>
+        <div class="number number-3">3</div>
+        <div class="number number-4">4</div>
+        <div class="number number-5">5</div>
+        <div class="number number-6">6</div>
+        <div class="number number-7">7</div>
+        <div class="number number-8">8</div>
+        <div class="number number-9">9</div>
+        <div class="number number-10">10</div>
+        <div class="number number-11">11</div>
+    </div>
     <div class="hand hour" id="hour-hand"></div>
     <div class="hand minute" id="minute-hand"></div>
     <div class="hand second" id="second-hand"></div>
     <div class="center"></div>
 </div>
-
-<div class="time-text" id="time-text"></div>
 
 <script>
     let secondRotationCount = 0; // Laskuri sekuntiviisarin kierroksille
@@ -123,10 +163,6 @@
         hourHand.style.transform = `rotate(${hourDegrees}deg)`;
         minuteHand.style.transform = `rotate(${minuteDegrees}deg)`;
         secondHand.style.transform = `rotate(${secondDegrees}deg)`;
-
-        // Päivitä aika tekstinä
-        const timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        document.getElementById('time-text').textContent = timeString;
     }
 
     // Päivitä kello sekunnin välein
