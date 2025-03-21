@@ -7,10 +7,12 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
         }
 
         .clock {
@@ -20,6 +22,7 @@
             border: 10px solid #333;
             border-radius: 50%;
             background: white;
+            margin-bottom: 20px;
         }
 
         .hand {
@@ -59,6 +62,12 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
+
+        .time-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -70,41 +79,35 @@
     <div class="center"></div>
 </div>
 
-<script>
-    async function fetchTime() {
-        const response = await fetch('http://worldtimeapi.org/api/timezone/Europe/Helsinki');
-        const data = await response.json();
-        return new Date(data.datetime);
-    }
+<div class="time-text" id="time-text"></div>
 
-    function updateClock(now) {
+<script>
+    function updateClock() {
+        const now = new Date(); // Hae nykyinen paikallinen aika
         const hours = now.getHours();
         const minutes = now.getMinutes();
         const seconds = now.getSeconds();
 
-        const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30;
-        const minuteDegrees = minutes * 6;
-        const secondDegrees = seconds * 6;
+        // Laske viisareiden kulmat
+        const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30; // Tunti + minuutit vaikuttavat tuntiviisareeseen
+        const minuteDegrees = minutes * 6 + (seconds / 60) * 6; // Minuutti + sekunnit vaikuttavat minuuttiviisareeseen
+        const secondDegrees = seconds * 6; // Sekuntiviisari
 
+        // Päivitä viisareiden asennot
         document.getElementById('hour-hand').style.transform = `rotate(${hourDegrees}deg)`;
         document.getElementById('minute-hand').style.transform = `rotate(${minuteDegrees}deg)`;
         document.getElementById('second-hand').style.transform = `rotate(${secondDegrees}deg)`;
+
+        // Päivitä aika tekstinä
+        const timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        document.getElementById('time-text').textContent = timeString;
     }
 
-    async function startClock() {
-        let now = await fetchTime();
-        updateClock(now);
+    // Päivitä kello sekunnin välein
+    setInterval(updateClock, 1000);
 
-        // Aloita päivitys tasan sekunnin välein
-        setTimeout(() => {
-            setInterval(() => {
-                now = new Date(now.getTime() + 1000);
-                updateClock(now);
-            }, 1000);
-        }, 1000 - now.getMilliseconds());
-    }
-
-    startClock();
+    // Päivitä kello heti sivun latautuessa
+    updateClock();
 </script>
 
 </body>
