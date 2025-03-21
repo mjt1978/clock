@@ -83,40 +83,41 @@
 <div class="time-text" id="time-text"></div>
 
 <script>
+    let secondRotationCount = 0; // Laskuri sekuntiviisarin kierroksille
+    let minuteRotationCount = 0; // Laskuri minuuttiviisarin kierroksille
+    let hourRotationCount = 0;   // Laskuri tuntiviisarin kierroksille
+
     function updateClock() {
         const now = new Date(); // Hae nykyinen aika
         const hours = now.getHours();
         const minutes = now.getMinutes();
         const seconds = now.getSeconds();
 
-        // Laske viisareiden kulmat
-        const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30; // Tunti + minuutit vaikuttavat tuntiviisareeseen
-        const minuteDegrees = minutes * 6; // Minuutti
-        const secondDegrees = seconds * 6; // Sekunti
+        // Laske viisareiden kulmat (vähennä 90 astetta, jotta aloitus on "ylhäältä")
+        let hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30 - 90; // Tunti + minuutit vaikuttavat tuntiviisareeseen
+        let minuteDegrees = minutes * 6 - 90; // Minuutti
+        let secondDegrees = seconds * 6 - 90; // Sekunti
+
+        // Lisää ylimääräinen kierros, kun viisari menee negatiiviseksi
+        if (seconds === 0) {
+            secondRotationCount++; // Kasvata sekuntiviisarin kierroslaskuria
+        }
+        if (minutes === 0 && seconds === 0) {
+            minuteRotationCount++; // Kasvata minuuttiviisarin kierroslaskuria
+        }
+        if (hours === 0 && minutes === 0 && seconds === 0) {
+            hourRotationCount++; // Kasvata tuntiviisarin kierroslaskuria
+        }
+
+        // Lisää kierrokset kulmiin
+        secondDegrees += secondRotationCount * 360;
+        minuteDegrees += minuteRotationCount * 360;
+        hourDegrees += hourRotationCount * 360;
 
         // Hae viisarit
         const hourHand = document.getElementById('hour-hand');
         const minuteHand = document.getElementById('minute-hand');
         const secondHand = document.getElementById('second-hand');
-
-        // Poista transition hetkellisesti, jos kulma on 0 astetta
-        if (secondDegrees === 0) {
-            secondHand.style.transition = 'none';
-        } else {
-            secondHand.style.transition = 'transform 0.5s ease-in-out';
-        }
-
-        if (minuteDegrees === 0) {
-            minuteHand.style.transition = 'none';
-        } else {
-            minuteHand.style.transition = 'transform 0.5s ease-in-out';
-        }
-
-        if (hourDegrees === 0) {
-            hourHand.style.transition = 'none';
-        } else {
-            hourHand.style.transition = 'transform 0.5s ease-in-out';
-        }
 
         // Aseta viisareiden kulmat
         hourHand.style.transform = `rotate(${hourDegrees}deg)`;
