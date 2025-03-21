@@ -77,8 +77,7 @@
         return new Date(data.datetime);
     }
 
-    async function updateClock() {
-        const now = await fetchTime();
+    function updateClock(now) {
         const hours = now.getHours();
         const minutes = now.getMinutes();
         const seconds = now.getSeconds();
@@ -92,8 +91,17 @@
         document.getElementById('second-hand').style.transform = `rotate(${secondDegrees}deg)`;
     }
 
-    setInterval(updateClock, 1000);
-    updateClock();
+    async function startClock() {
+        let now = await fetchTime();
+        updateClock(now);
+
+        setInterval(() => {
+            now = new Date(now.getTime() + 1000);
+            updateClock(now);
+        }, 1000);
+    }
+
+    startClock();
 </script>
 
 </body>
