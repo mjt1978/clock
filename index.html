@@ -89,9 +89,9 @@
         const seconds = now.getSeconds();
 
         // Laske viisareiden kulmat
-        const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30; // Tunti + minuutit vaikuttavat tuntiviisareeseen
-        const minuteDegrees = minutes * 6; // Minuutti
-        const secondDegrees = seconds * 6; // Sekuntiviisari
+        const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30 - 90; // Tunti + minuutit vaikuttavat tuntiviisareeseen
+        const minuteDegrees = minutes * 6 - 90; // Minuutti
+        const secondDegrees = seconds * 6 - 90; // Sekuntiviisari
 
         // Päivitä viisareiden asennot
         const hourHand = document.getElementById('hour-hand');
