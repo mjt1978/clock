@@ -95,10 +95,13 @@
         let now = await fetchTime();
         updateClock(now);
 
-        setInterval(() => {
-            now = new Date(now.getTime() + 1000);
-            updateClock(now);
-        }, 1000);
+        // Aloita päivitys tasan sekunnin välein
+        setTimeout(() => {
+            setInterval(() => {
+                now = new Date(now.getTime() + 1000);
+                updateClock(now);
+            }, 1000);
+        }, 1000 - now.getMilliseconds());
     }
 
     startClock();
