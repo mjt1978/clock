@@ -73,9 +73,9 @@
 <script>
     function updateClock() {
         const now = new Date();
-        const hours = now.getUTCHours() + 2; // Suomen aika (UTC+2)
-        const minutes = now.getUTCMinutes();
-        const seconds = now.getUTCSeconds();
+        const hours = now.getHours(); // Suomen aika
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
 
         const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30;
         const minuteDegrees = minutes * 6;
