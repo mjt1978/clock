@@ -13,6 +13,7 @@
             height: 100vh;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            margin: 0;
         }
 
         .clock {
@@ -33,7 +34,7 @@
             top: 50%;
             left: 50%;
             transform-origin: 0% 50%;
-            transition: transform 0.5s linear;
+            transition: transform 0.5s ease-in-out;
         }
 
         .hand.hour {
@@ -83,40 +84,41 @@
 
 <script>
     function updateClock() {
-        const now = new Date(); // Hae nykyinen paikallinen aika
+        const now = new Date(); // Hae nykyinen aika
         const hours = now.getHours();
         const minutes = now.getMinutes();
         const seconds = now.getSeconds();
 
         // Laske viisareiden kulmat
-        const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30 - 90; // Tunti + minuutit vaikuttavat tuntiviisareeseen
-        const minuteDegrees = minutes * 6 - 90; // Minuutti
-        const secondDegrees = seconds * 6 - 90; // Sekuntiviisari
+        const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30; // Tunti + minuutit vaikuttavat tuntiviisareeseen
+        const minuteDegrees = minutes * 6; // Minuutti
+        const secondDegrees = seconds * 6; // Sekunti
 
-        // Päivitä viisareiden asennot
+        // Hae viisarit
         const hourHand = document.getElementById('hour-hand');
         const minuteHand = document.getElementById('minute-hand');
         const secondHand = document.getElementById('second-hand');
 
-        // Tarkista, onko viisari ylittänyt 360 asteen rajan
+        // Poista transition hetkellisesti, jos kulma on 0 astetta
         if (secondDegrees === 0) {
             secondHand.style.transition = 'none';
         } else {
-            secondHand.style.transition = 'transform 0.5s linear';
+            secondHand.style.transition = 'transform 0.5s ease-in-out';
         }
 
         if (minuteDegrees === 0) {
             minuteHand.style.transition = 'none';
         } else {
-            minuteHand.style.transition = 'transform 0.5s linear';
+            minuteHand.style.transition = 'transform 0.5s ease-in-out';
         }
 
         if (hourDegrees === 0) {
             hourHand.style.transition = 'none';
         } else {
-            hourHand.style.transition = 'transform 0.5s linear';
+            hourHand.style.transition = 'transform 0.5s ease-in-out';
         }
 
+        // Aseta viisareiden kulmat
         hourHand.style.transform = `rotate(${hourDegrees}deg)`;
         minuteHand.style.transform = `rotate(${minuteDegrees}deg)`;
         secondHand.style.transform = `rotate(${secondDegrees}deg)`;
