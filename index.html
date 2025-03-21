@@ -33,7 +33,7 @@
             top: 50%;
             left: 50%;
             transform-origin: 0% 50%;
-            transition: transform 0.5s ease-in-out;
+            transition: transform 0.5s linear;
         }
 
         .hand.hour {
@@ -89,14 +89,37 @@
         const seconds = now.getSeconds();
 
         // Laske viisareiden kulmat
-        const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30 - 90; // Tunti + minuutit vaikuttavat tuntiviisareeseen
-        const minuteDegrees = minutes * 6 - 90; // Minuutti
-        const secondDegrees = seconds * 6 - 90; // Sekuntiviisari
+        const hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30; // Tunti + minuutit vaikuttavat tuntiviisareeseen
+        const minuteDegrees = minutes * 6; // Minuutti
+        const secondDegrees = seconds * 6; // Sekuntiviisari
 
         // Päivitä viisareiden asennot
-        document.getElementById('hour-hand').style.transform = `rotate(${hourDegrees}deg)`;
-        document.getElementById('minute-hand').style.transform = `rotate(${minuteDegrees}deg)`;
-        document.getElementById('second-hand').style.transform = `rotate(${secondDegrees}deg)`;
+        const hourHand = document.getElementById('hour-hand');
+        const minuteHand = document.getElementById('minute-hand');
+        const secondHand = document.getElementById('second-hand');
+
+        // Tarkista, onko viisari ylittänyt 360 asteen rajan
+        if (secondDegrees === 0) {
+            secondHand.style.transition = 'none';
+        } else {
+            secondHand.style.transition = 'transform 0.5s linear';
+        }
+
+        if (minuteDegrees === 0) {
+            minuteHand.style.transition = 'none';
+        } else {
+            minuteHand.style.transition = 'transform 0.5s linear';
+        }
+
+        if (hourDegrees === 0) {
+            hourHand.style.transition = 'none';
+        } else {
+            hourHand.style.transition = 'transform 0.5s linear';
+        }
+
+        hourHand.style.transform = `rotate(${hourDegrees}deg)`;
+        minuteHand.style.transform = `rotate(${minuteDegrees}deg)`;
+        secondHand.style.transform = `rotate(${secondDegrees}deg)`;
 
         // Päivitä aika tekstinä
         const timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
