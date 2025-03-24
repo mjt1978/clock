@@ -190,9 +190,9 @@
         const minutes = now.getMinutes();
         const seconds = now.getSeconds();
 
-        let hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30 - 0;
-        let minuteDegrees = minutes * 6 - 0;
-        let secondDegrees = seconds * 6 - 0;
+        let hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30 - 270;
+        let minuteDegrees = minutes * 6 - 270;
+        let secondDegrees = seconds * 6 - 270;
 
         if (seconds === 0) {
             secondRotationCount++;
