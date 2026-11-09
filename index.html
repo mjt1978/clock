@@ -28,18 +28,25 @@ body {
 }
 /* Tähtitaivas: kaksi kerrosta, jotka liikkuvat hitaasti vasemmalta oikealle eri nopeuksilla.
    Kerros siirtyy täsmälleen yhden laatan leveyden, joten silmukka on saumaton. */
+/* Kevyt toteutus: kerros on laatan verran ikkunaa leveämpi ja sitä siirretään transform-animaatiolla.
+   Selain käsittelee kerroksen näytönohjaimella eikä piirrä gradientteja uudelleen joka ruudulla. */
 .stars {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: calc(100% + var(--tile));
     z-index: 0;
     pointer-events: none;
     background-repeat: repeat-x;
+    background-size: var(--tile) 100%;
+    will-change: transform;
     animation-duration: 200s;
     animation-timing-function: linear;
     animation-iteration-count: infinite;
-    animation: none;
 }
 #starsA {
+    --tile: 700px;
     background-image:
         radial-gradient(2.5px 2.5px at 61% 74%, #dbe4ff, rgba(255,255,255,0) 100%),
         radial-gradient(2px 2px at 69% 78%, #ffffff, rgba(255,255,255,0) 100%),
@@ -63,10 +70,10 @@ body {
         radial-gradient(2.5px 2.5px at 52% 93%, #dbe4ff, rgba(255,255,255,0) 100%),
         radial-gradient(3.5px 3.5px at 13% 75%, #ffffff, rgba(255,255,255,0) 100%),
         radial-gradient(2px 2px at 90% 37%, #ffffff, rgba(255,255,255,0) 100%);
-    background-size: 700px 100%;
     animation-name: driftA;
 }
 #starsB {
+    --tile: 1100px;
     background-image:
         radial-gradient(1.5px 1.5px at 43% 45%, #dbe4ff, rgba(255,255,255,0) 100%),
         radial-gradient(2px 2px at 19% 20%, #ffffff, rgba(255,255,255,0) 100%),
@@ -86,11 +93,11 @@ body {
         radial-gradient(2px 2px at 83% 61%, #ffe9b0, rgba(255,255,255,0) 100%),
         radial-gradient(2px 2px at 65% 76%, #dbe4ff, rgba(255,255,255,0) 100%),
         radial-gradient(2px 2px at 27% 83%, #cfe0ff, rgba(255,255,255,0) 100%);
-    background-size: 1100px 100%;
     animation-name: driftB;
 }
-@keyframes driftA { from { background-position: 0 0; } to { background-position: 700px 0; } }
-@keyframes driftB { from { background-position: 0 0; } to { background-position: 1100px 0; } }
+/* Siirto vasemmalta oikealle täsmälleen yhden laatan verran: silmukka on saumaton */
+@keyframes driftA { from { transform: translateX(-700px); } to { transform: translateX(0); } }
+@keyframes driftB { from { transform: translateX(-1100px); } to { transform: translateX(0); } }
 @media (prefers-reduced-motion: reduce) { .stars { animation: none; } }
 
 #timer {
