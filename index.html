@@ -1,225 +1,909 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selkeä Viisarikello</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            overflow: hidden;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karkaava pallo – avaruus</title>
+<style>
+* { box-sizing: border-box; }
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #050817;
+    /* Sumu taustalla (paikallaan) */
+    background-image:
+        radial-gradient(ellipse at 20% 80%, rgba(110, 70, 220, 0.60), transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(30, 120, 230, 0.55), transparent 60%),
+        radial-gradient(ellipse at 55% 50%, rgba(200, 60, 160, 0.20), transparent 65%);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+/* Tähtitaivas: kaksi kerrosta, jotka liikkuvat hitaasti vasemmalta oikealle eri nopeuksilla.
+   Kerros siirtyy täsmälleen yhden laatan leveyden, joten silmukka on saumaton. */
+.stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-repeat: repeat-x;
+    animation-duration: 200s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+#starsA {
+    background-image:
+        radial-gradient(2.5px 2.5px at 61% 74%, #dbe4ff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 69% 78%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(3.5px 3.5px at 69% 63%, #ffe9b0, rgba(255,255,255,0) 100%),
+        radial-gradient(2.5px 2.5px at 27% 15%, #cfe0ff, rgba(255,255,255,0) 100%),
+        radial-gradient(3px 3px at 22% 14%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2.5px 2.5px at 80% 53%, #ffe9b0, rgba(255,255,255,0) 100%),
+        radial-gradient(3px 3px at 87% 23%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(1.5px 1.5px at 71% 11%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(3px 3px at 28% 33%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2.5px 2.5px at 63% 44%, #ffe9b0, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 29% 69%, #cfe0ff, rgba(255,255,255,0) 100%),
+        radial-gradient(3.5px 3.5px at 67% 3%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 62% 86%, #dbe4ff, rgba(255,255,255,0) 100%),
+        radial-gradient(3.5px 3.5px at 74% 13%, #cfe0ff, rgba(255,255,255,0) 100%),
+        radial-gradient(3px 3px at 44% 32%, #cfe0ff, rgba(255,255,255,0) 100%),
+        radial-gradient(3px 3px at 7% 11%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 55% 16%, #dbe4ff, rgba(255,255,255,0) 100%),
+        radial-gradient(3.5px 3.5px at 12% 5%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(1.5px 1.5px at 31% 29%, #dbe4ff, rgba(255,255,255,0) 100%),
+        radial-gradient(2.5px 2.5px at 52% 93%, #dbe4ff, rgba(255,255,255,0) 100%),
+        radial-gradient(3.5px 3.5px at 13% 75%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 90% 37%, #ffffff, rgba(255,255,255,0) 100%);
+    background-size: 700px 100%;
+    animation-name: driftA;
+}
+#starsB {
+    background-image:
+        radial-gradient(1.5px 1.5px at 43% 45%, #dbe4ff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 19% 20%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2.5px 2.5px at 5% 10%, #dbe4ff, rgba(255,255,255,0) 100%),
+        radial-gradient(3px 3px at 26% 90%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 61% 68%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2.5px 2.5px at 57% 85%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 54% 56%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 38% 78%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2.5px 2.5px at 30% 26%, #ffe9b0, rgba(255,255,255,0) 100%),
+        radial-gradient(1.5px 1.5px at 86% 76%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2.5px 2.5px at 22% 30%, #cfe0ff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 5% 81%, #cfe0ff, rgba(255,255,255,0) 100%),
+        radial-gradient(1.5px 1.5px at 53% 12%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(3.5px 3.5px at 30% 77%, #ffffff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 5% 79%, #cfe0ff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 83% 61%, #ffe9b0, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 65% 76%, #dbe4ff, rgba(255,255,255,0) 100%),
+        radial-gradient(2px 2px at 27% 83%, #cfe0ff, rgba(255,255,255,0) 100%);
+    background-size: 1100px 100%;
+    animation-name: driftB;
+}
+@keyframes driftA { from { background-position: 0 0; } to { background-position: 700px 0; } }
+@keyframes driftB { from { background-position: 0 0; } to { background-position: 1100px 0; } }
+@media (prefers-reduced-motion: reduce) { .stars { animation: none; } }
 
-        .clock {
-            position: relative;
-            width: 320px;
-            height: 320px;
-            border: 15px solid #3a4a6d;
-            border-radius: 50%;
-            background: white;
-            box-shadow: 
-                0 0 30px rgba(0, 0, 0, 0.2),
-                inset 0 0 20px rgba(0, 0, 0, 0.1),
-                0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .hand {
-            position: absolute;
-            transform-origin: 100% 50%;
-            transition: transform 0.5s cubic-bezier(0.4, 2.3, 0.3, 1);
-            border-radius: 10px;
-            filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
-        }
-
-        .hand.hour {
-            width: 30%;
-            height: 10px;
-            top: 50%;
-            left: 20%;
-            background: #2c3e50;
-        }
-
-        .hand.minute {
-            width: 40%;
-            height: 7px;
-            top: 50%;
-            left: 10%;
-            background: #34495e;
-        }
-
-        .hand.second {
-            width: 45%;
-            height: 4px;
-            top: 50%;
-            left: 5%;
-            background: #e74c3c;
-            transition: transform 0.2s cubic-bezier(0.4, 2.3, 0.3, 1);
-        }
-
-        .center {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: #3a4a6d;
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-            z-index: 10;
-        }
-
-        .center::after {
-            content: '';
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #e74c3c;
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .numbers {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-        }
-
-        .number {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #3a4a6d;
-            text-align: center;
-            line-height: 24px;
-        }
-
-        /* Numeroiden sijoittelu */
-        .number-12 { top: 15px; left: 50%; transform: translateX(-50%); }
-        .number-1 { top: 35px; right: 75px; }
-        .number-2 { top: 85px; right: 35px; }
-        .number-3 { top: 50%; right: 15px; transform: translateY(-50%); }
-        .number-4 { bottom: 85px; right: 35px; }
-        .number-5 { bottom: 35px; right: 75px; }
-        .number-6 { bottom: 15px; left: 50%; transform: translateX(-50%); }
-        .number-7 { bottom: 35px; left: 75px; }
-        .number-8 { bottom: 85px; left: 35px; }
-        .number-9 { top: 50%; left: 15px; transform: translateY(-50%); }
-        .number-10 { top: 85px; left: 35px; }
-        .number-11 { top: 35px; left: 75px; }
-
-        /* Minuutti-indikaattorit */
-        .minute-marks {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-        }
-
-        .mark {
-            position: absolute;
-            width: 3px;
-            height: 10px;
-            background: #95a5a6;
-            left: 50%;
-            transform-origin: 0 160px;
-        }
-
-        .mark.main {
-            width: 4px;
-            height: 15px;
-            background: #3a4a6d;
-        }
-    </style>
+#timer {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    color: #34d399;
+    font: 600 20px/1 system-ui, sans-serif;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 10px #34d399;
+    pointer-events: none;
+}
+/* Pelin alun ohjetekstit: ensin ensimmäinen, sen jälkeen toinen */
+.hint {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    z-index: 2;
+    max-width: 92vw;
+    padding: 10px 18px;
+    color: var(--c, #f1f5f9);
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid var(--c, rgba(96, 165, 250, 0.45));
+    border-radius: 20px;
+    font: 600 17px/1.3 system-ui, sans-serif;
+    text-align: center;
+    text-shadow: 0 0 8px var(--c, #168bff);
+    pointer-events: none;
+    opacity: 0;
+    animation: hintShow 3.6s ease forwards;
+}
+#hint1 { animation-delay: 0.6s; }
+#hint2 { animation-delay: 4.6s; }
+/* Voittosäännöt: yksi kerrallaan, pallon omalla värillä */
+#hint3 { --c: #facc15; animation-delay: 8.6s; }
+#hint4 { --c: #34d399; animation-delay: 12.6s; }
+#hint5 { --c: #fb923c; animation-delay: 16.6s; animation-duration: 5.2s; }
+#hint6 { --c: #ef4444; animation-delay: 22.2s; animation-duration: 5.2s; }
+@keyframes hintShow {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(8px); }
+    12%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+    85%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+}
+#sound {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+    padding: 8px 12px;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(96, 165, 250, 0.5);
+    border-radius: 999px;
+    font: 500 14px/1 system-ui, sans-serif;
+    cursor: pointer;
+}
+#result {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    background: rgba(5, 8, 23, 0.45);
+    font-family: system-ui, sans-serif;
+    text-align: center;
+}
+#resultText { font-size: clamp(34px, 9vw, 80px); font-weight: 800; }
+#result.green #resultText { color: #34d399; text-shadow: 0 0 24px #34d399; }
+#result.yellow #resultText { color: #facc15; text-shadow: 0 0 24px #facc15; }
+#result.orange #resultText { color: #fb923c; text-shadow: 0 0 24px #fb923c; }
+#result.red #resultText { color: #ef4444; text-shadow: 0 0 24px #ef4444; }
+#resultHint { color: #cbd5e1; font-size: 16px; }
+canvas {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: min(95vw, 95vh);
+    height: min(95vw, 95vh);
+    background: transparent;
+}
+</style>
 </head>
 <body>
-
-<div class="clock">
-    <div class="minute-marks" id="minute-marks"></div>
-    <div class="numbers">
-        <div class="number number-12">12</div>
-        <div class="number number-1">1</div>
-        <div class="number number-2">2</div>
-        <div class="number number-3">3</div>
-        <div class="number number-4">4</div>
-        <div class="number number-5">5</div>
-        <div class="number number-6">6</div>
-        <div class="number number-7">7</div>
-        <div class="number number-8">8</div>
-        <div class="number number-9">9</div>
-        <div class="number number-10">10</div>
-        <div class="number number-11">11</div>
-    </div>
-    <div class="hand hour" id="hour-hand"></div>
-    <div class="hand minute" id="minute-hand"></div>
-    <div class="hand second" id="second-hand"></div>
-    <div class="center"></div>
-</div>
-
+<div id="starsA" class="stars"></div>
+<div id="starsB" class="stars"></div>
+<div id="timer">Aika: 120 s</div>
+<button id="sound" type="button">🔇 Ääni pois – napauta</button>
+<div id="result"><div id="resultText"></div><div id="resultHint">Napauta pelataksesi uudelleen</div></div>
+<div id="hint1" class="hint">Napauta pysäyttääksesi pyöriminen</div>
+<div id="hint2" class="hint">Tuplanapauta kiihdyttääksesi hitaita palloja</div>
+<div id="hint3" class="hint">Keltainen voittaa karatessaan kehästä</div>
+<div id="hint4" class="hint">Vihreä voittaa ajan loppuessa</div>
+<div id="hint5" class="hint">Oranssi voittaa päästessään kehään ja syödessään muut pallot</div>
+<div id="hint6" class="hint">Punainen voittaa päästessään kehän keskipisteeseen</div>
+<canvas id="canvas" width="700" height="700"></canvas>
 <script>
-    // Lisää minuuttimerkit
-    const minuteMarks = document.getElementById('minute-marks');
-    for (let i = 0; i < 60; i++) {
-        const mark = document.createElement('div');
-        mark.className = 'mark' + (i % 5 === 0 ? ' main' : '');
-        mark.style.transform = `rotate(${i * 6}deg)`;
-        minuteMarks.appendChild(mark);
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const cx = 350, cy = 350, radius = 230;
+const rotationSpeed = 0.0015;
+let rotation = 0, rotSpeed = rotationSpeed, speed = 4.5;
+const bumps = [];
+const hitColors = ["#facc15", "#fb7185", "#a78bfa"];
+
+let hitCount = 0; // vain äänen sävelkorkeutta varten, ei näytetä
+
+// ---------- Äänet (Web Audio API) ----------
+// Selain sallii äänen vasta käyttäjän napautuksen jälkeen, joten ääni kytkeytyy ensimmäisestä napautuksesta.
+let audioCtx = null, masterGain = null, soundOn = false, soundTouched = false;
+const lastPlay = {};
+const SCALE = [0, 2, 4, 7, 9]; // pentatoninen asteikko: kimmokkeet soivat sopusointuisesti
+function initAudio() {
+    if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return false;
+        audioCtx = new AC();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.25;
+        masterGain.connect(audioCtx.destination);
     }
-
-    let secondRotationCount = 0;
-    let minuteRotationCount = 0;
-    let hourRotationCount = 0;
-
-    function updateClock() {
-        const now = new Date();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        const seconds = now.getSeconds();
-
-        let hourDegrees = (hours % 12) * 30 + (minutes / 60) * 30 - 270;
-        let minuteDegrees = minutes * 6 - 270;
-        let secondDegrees = seconds * 6 - 270;
-
-        if (seconds === 0) {
-            secondRotationCount++;
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return true;
+}
+function tone(freq, dur, type, vol, toFreq) {
+    const t = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (toFreq) o.frequency.exponentialRampToValueAtTime(toFreq, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(masterGain);
+    o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, vol) {
+    const len = Math.floor(audioCtx.sampleRate * dur);
+    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = audioCtx.createBufferSource(), g = audioCtx.createGain();
+    src.buffer = buf; g.gain.value = vol;
+    src.connect(g); g.connect(masterGain); src.start();
+}
+function playSound(name) {
+    if (!soundOn || !audioCtx) return;
+    const now = performance.now(), gap = (name === "hit" || name === "edge") ? 25 : 45;
+    if (lastPlay[name] && now - lastPlay[name] < gap) return; // estää äänipuuron
+    lastPlay[name] = now;
+    switch (name) {
+        case "hit": { // keltaisen kimmoke: sävelkorkeus nousee kimmokkeiden mukana
+            const i = Math.max(0, hitCount - 1);
+            const semis = SCALE[i % 5] + 12 * (Math.floor(i / 5) % 3);
+            tone(261.63 * Math.pow(2, semis / 12), 0.22, "triangle", 0.5);
+            break;
         }
-        if (minutes === 0 && seconds === 0) {
-            minuteRotationCount++;
-        }
-        if (hours === 0 && minutes === 0 && seconds === 0) {
-            hourRotationCount++;
-        }
-
-        secondDegrees += secondRotationCount * 360;
-        minuteDegrees += minuteRotationCount * 360;
-        hourDegrees += hourRotationCount * 360;
-
-        const hourHand = document.getElementById('hour-hand');
-        const minuteHand = document.getElementById('minute-hand');
-        const secondHand = document.getElementById('second-hand');
-
-        hourHand.style.transform = `rotate(${hourDegrees}deg)`;
-        minuteHand.style.transform = `rotate(${minuteDegrees}deg)`;
-        secondHand.style.transform = `rotate(${secondDegrees}deg)`;
+        case "edge":  tone(880, 0.07, "square", 0.15); break;
+        case "break": noise(0.3, 0.5); tone(140, 0.35, "sine", 0.7, 50); break;
+        case "heal":  tone(520, 0.14, "sine", 0.35, 780); break;
+        case "split": tone(380, 0.16, "sine", 0.4, 900); tone(570, 0.16, "sine", 0.25, 1350); break;
+        case "merge": tone(900, 0.16, "sine", 0.4, 380); break;
+        case "click": tone(220, 0.04, "square", 0.12); break;
+        case "escape":     tone(200, 0.6, "sawtooth", 0.3, 1400); noise(0.4, 0.15); break;
+        case "winYellow": [392, 523, 659, 784, 1046].forEach((f, i) => setTimeout(() => { if (soundOn) tone(f, 0.22, "square", 0.18); }, i * 90)); break;
+        case "win": [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => { if (soundOn) tone(f, 0.28, "triangle", 0.4); }, i * 120)); break;
+        case "boost": tone(300, 0.25, "sawtooth", 0.22, 950); noise(0.12, 0.1); break;
+        case "explode": noise(0.7, 0.6); tone(110, 0.7, "sine", 0.8, 30); break;
+        case "winRed": [262, 330, 392, 523, 392, 523].forEach((f, i) => setTimeout(() => { if (soundOn) tone(f, 0.3, "triangle", 0.35); }, i * 110)); break;
+        case "slowmo": tone(520, 0.8, "sine", 0.25, 80); noise(0.25, 0.08); break;
+        case "seal": tone(330, 0.25, "triangle", 0.35, 660); tone(990, 0.3, "sine", 0.2); break;
+        case "orange": tone(130, 0.08, "triangle", 0.2); break;
+        case "eat":    tone(220, 0.14, "square", 0.3, 70); noise(0.08, 0.15); break;
+        case "winOrange": [196, 247, 294, 392, 294, 392].forEach((f, i) => setTimeout(() => { if (soundOn) tone(f, 0.26, "sawtooth", 0.2); }, i * 110)); break;
+        case "escapeSoft": tone(500, 0.3, "sine", 0.12, 1100); break;
     }
+}
+function setSound(on) {
+    soundOn = on && initAudio();
+    soundBtn.textContent = soundOn ? "🔊 Ääni päällä" : "🔇 Ääni pois";
+}
+const soundBtn = document.getElementById("sound");
+soundBtn.addEventListener("click", () => { soundTouched = true; setSound(!soundOn); });
+function firstTouch(e) {
+    if (soundTouched || e.target === soundBtn) return;
+    soundTouched = true; setSound(true);
+}
+document.addEventListener("pointerdown", firstTouch);
+document.addEventListener("keydown", firstTouch);
 
-    setInterval(updateClock, 1000);
-    updateClock();
+// ---------- Jälkivana ----------
+const TRAIL_LEN = 22;
+function drawTrail(b) {
+    const n = b.trail.length;
+    ctx.shadowBlur = 0; ctx.fillStyle = b.color;
+    for (let i = 0; i < n - 1; i++) {
+        const t = i / n;
+        ctx.globalAlpha = t * 0.45;
+        ctx.beginPath();
+        ctx.arc(b.trail[i].x, b.trail[i].y, b.r * (0.25 + 0.7 * t), 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+// Pallo: counted = tekee kehään kolhuja ja kimmokkeet lasketaan,
+// !counted = korjaa kolhuja eikä kimmokkeita lasketa
+function makeBall(color, counted, avoid) {
+    const b = { x: 0, y: 0, vx: 0, vy: 0, r: 11, color, counted, escaped: false, cool: 0, flash: 0, trail: [] };
+    do {
+        const posAngle = Math.random() * Math.PI * 2;
+        const dist = Math.sqrt(Math.random()) * (radius - 60);
+        b.x = cx + Math.cos(posAngle) * dist;
+        b.y = cy + Math.sin(posAngle) * dist;
+    } while (avoid && Math.hypot(b.x - avoid.x, b.y - avoid.y) < avoid.r + b.r + 20);
+    const dir = Math.random() * Math.PI * 2, v = 3.2;
+    b.vx = Math.cos(dir) * v;
+    b.vy = Math.sin(dir) * v;
+    return b;
+}
+const ball1 = makeBall("#facc15", true, null);
+const ball2 = makeBall("#34d399", false, ball1);
+// Oranssi pallo: lähtee kehän ulkopuolelta, voi mennä reiästä sisään ja syö kehän sisällä keltaisen ja vihreät
+const ORANGE_SPEED = 4.8; // oranssin nopeus (muut pallot lähtevät nopeudella 3,2)
+function makeOrange() {
+    const b = { x: 0, y: 0, vx: 0, vy: 0, r: 11, color: "#fb923c", counted: false, orange: true,
+                inside: false, passing: false, fromInside: false, escaped: false, cool: 0, flash: 0, trail: [] };
+    const m = b.r + 8;
+    do {
+        b.x = m + Math.random() * (700 - 2 * m);
+        b.y = m + Math.random() * (700 - 2 * m);
+    } while (Math.hypot(b.x - cx, b.y - cy) < radius + b.r + 30);
+    const dir = Math.random() * Math.PI * 2, v = ORANGE_SPEED;
+    b.vx = Math.cos(dir) * v;
+    b.vy = Math.sin(dir) * v;
+    return b;
+}
+const ball3 = makeOrange();
+const ball5 = makeOrange();   // toinen oranssi pallo
+let lastOrange = ball3;       // viimeksi syönyt oranssi (kamera tarkentaa siihen voitossa)
+// Punainen pallo: hidas ja kevyt. Kiertää kehän ulkopuolella, ohjaa itsensä reikään, kulkee keskipisteeseen ja räjähtää.
+const RED_SPEED = 0.3;     // ohjausnopeus kehän ulkopuolella: hyvin hidas (muut pallot 3,2), ei välttämättä ehdi reikään joka kierroksella
+const RED_IN_SPEED = 0.3;  // nopeus kehän sisällä matkalla keskipisteeseen
+const RED_KNOCK = 10;      // kimpoamisnopeus kontaktissa toiseen palloon (kevyt pallo lentää kauas)
+const RED_STEER = 0.04;    // kuinka nopeasti pallo ohjaa itsensä haluttuun suuntaan (alistepeittäin)
+const RED_ORBIT = radius + 11 + 16; // kiertoradan säde kehän ulkopuolella
+const RED_DIR = -1;        // kiertosuunta: aina vastapäivään (ruudulla); sisäänkäyntiä haetaan vain tätä reittiä
+function makeRed() {
+    const ang = Math.random() * Math.PI * 2, dir = RED_DIR;
+    const b = { x: cx + Math.cos(ang) * RED_ORBIT, y: cy + Math.sin(ang) * RED_ORBIT, vx: 0, vy: 0, r: 11,
+                color: "#ef4444", counted: false, red: true, inside: false, passing: false, fromInside: false,
+                diving: false, orbitDir: dir, escaped: false, cool: 0, flash: 0, trail: [] };
+    b.vx = -Math.sin(ang) * dir * RED_SPEED; b.vy = Math.cos(ang) * dir * RED_SPEED;
+    return b;
+}
+const ball4 = makeRed();
+const balls = [ball1, ball2, ball3, ball4, ball5];
+let redArrived = false, explosion = null;
+let yellowEaten = false;
+// Punainen on kehässä (sisällä tai reiän läpi menossa): oranssin pitää syödä myös se voittaakseen
+const redInRing = () => !ball4.eaten && (ball4.inside || ball4.passing);
+// Vihreät pallot, jotka ovat vielä kehän sisällä (kehästä paenneet eivät ole enää pelissä)
+const greensInPlay = () => balls.filter(b => !b.counted && !b.orange && !b.red && !b.escaped && !b.eaten).length;
+
+function angleDiff(a,b) { return Math.atan2(Math.sin(a-b),Math.cos(a-b)); }
+function findBump(angle) {
+    return bumps.find(b => Math.abs(angleDiff(angle,b.angle)) < 0.065);
+}
+function wall(angle) {
+    let r=radius, derivative=0;
+    for (const b of bumps) {
+        const d=angleDiff(angle,b.angle), sigma=b.width;
+        const e=Math.exp(-d*d/(2*sigma*sigma));
+        r-=b.depth*e;
+        derivative+=b.depth*d/(sigma*sigma)*e;
+    }
+    return {r,derivative};
+}
+// Vihreän pallon tukkimat reiät: pysyviä, rikkoutumattomia vihreitä kehän pätkiä (kehän omassa kulmassa)
+const seals = [];
+const SEAL_GREEN = "#34d399";
+function sealAt(localAngle) {
+    return seals.some(sl => Math.abs(angleDiff(localAngle, sl.angle)) < sl.half);
+}
+function drawCircle() {
+    const steps=900, step=2*Math.PI/steps;
+    ctx.lineWidth=7; ctx.lineCap="round";
+    ctx.shadowColor="#168bff"; ctx.shadowBlur=13;
+    let drawing=false, previousColor=null;
+    for(let i=0;i<=steps;i++) {
+        const a=-Math.PI+i*step;
+        // Kolmannella osumalla syntynyt repeämä jätetään piirtämättä.
+        if(!sealAt(a) && bumps.some(b=>b.broken && Math.abs(angleDiff(a,b.angle))<b.holeHalf)) {
+            if(drawing) ctx.stroke();
+            drawing=false; previousColor=null; continue;
+        }
+        const w=wall(a), wa=a+rotation;
+        const x=cx+w.r*Math.cos(wa), y=cy+w.r*Math.sin(wa);
+        const bump=findBump(a), color=sealAt(a)?SEAL_GREEN:(bump?bump.color:"#60a5fa");
+        if(!drawing || color!==previousColor) {
+            if(drawing) ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x,y); ctx.strokeStyle=color;
+            drawing=true; previousColor=color;
+        } else ctx.lineTo(x,y);
+    }
+    if(drawing) ctx.stroke();
+    ctx.shadowBlur=0;
+}
+function damageBump(a) {
+    if(sealAt(a)) return null;   // tukittua kohtaa ei voi kolhia eikä rikkoa
+    let bump=findBump(a);
+    if(!bump) {
+        bump={angle:a,hits:0,depth:0,width:0.035,color:hitColors[0],broken:false,holeHalf:0.1};
+        bumps.push(bump);
+    }
+    bump.hits++;
+    bump.depth=Math.min(24,bump.depth+6);
+    bump.color=hitColors[(bump.hits-1)%hitColors.length];
+    if(bump.hits>=3) bump.broken=true;
+    return bump;
+}
+// Korjaa värikästä kohtaa yhden askeleen suoremmaksi; taipumattomiin ei tehdä mitään
+function healBump(a) {
+    const bump=findBump(a);
+    if(!bump) return false;
+    bump.hits--;
+    if(bump.hits<=0) {
+        bumps.splice(bumps.indexOf(bump),1);
+    } else {
+        bump.depth=6*bump.hits;
+        bump.color=hitColors[(bump.hits-1)%hitColors.length];
+        bump.broken=false;
+    }
+    return true;
+}
+function bounce(ball, worldAngle) {
+    const a=worldAngle-rotation;
+    let snd=null;
+    if(ball.orange) snd="orange";                       // oranssi ei kolhi eikä korjaa kehää
+    else if(ball.counted) { const bp=damageBump(a); snd=(bp && bp.broken)?"break":"hit"; }
+    else if(healBump(a)) snd="heal";
+    const outward = ball.orange && !ball.inside;        // ulkopuolinen oranssi kimpoaa kehän ulkopinnasta
+
+    const w=wall(a), r=w.r, dr=w.derivative;
+    const tx=dr*Math.cos(a)-r*Math.sin(a), ty=dr*Math.sin(a)+r*Math.cos(a);
+    let nx=ty, ny=-tx, len=Math.hypot(nx,ny); nx/=len; ny/=len;
+    const cos=Math.cos(rotation), sin=Math.sin(rotation);
+    const tempX=nx*cos-ny*sin, tempY=nx*sin+ny*cos; nx=tempX; ny=tempY;
+    const dx=ball.x-cx, dy=ball.y-cy;
+    const side=nx*dx+ny*dy;
+    if(outward ? side<0 : side>0) { nx=-nx; ny=-ny; }
+    const wallVx=-rotSpeed*dy, wallVy=rotSpeed*dx;
+    const rvx=ball.vx-wallVx, rvy=ball.vy-wallVy, dot=rvx*nx+rvy*ny;
+    ball.vx-=2*dot*nx; ball.vy-=2*dot*ny;
+    const rr = outward ? r+ball.r+2 : r-ball.r-2;
+    ball.x=cx+Math.cos(worldAngle)*rr;
+    ball.y=cy+Math.sin(worldAngle)*rr;
+    if(ball.counted) { speed+=0.002; hitCount++; }
+    if(snd) playSound(snd);
+}
+// Onko tässä kulmassa reikä (ei seinää)?
+function holeAt(worldAngle) {
+    const local = worldAngle - rotation;
+    if (sealAt(local)) return false;
+    return bumps.some(b => b.broken && Math.abs(angleDiff(local, b.angle)) < b.holeHalf);
+}
+// Reiän molemmat reunat toimivat pyöreinä "tappeina", joista pallo kimpoaa
+function bounceFromHoleEdges(ball) {
+    const capR = ball.r + 3.5; // 3.5 = viivan paksuus / 2 (pyöristetty pää)
+    for (const b of bumps) {
+        if (!b.broken) continue;
+        for (const s of [-1, 1]) {
+            const la = b.angle + s * b.holeHalf;
+            if (sealAt(la)) continue; // reunaa ei ole, jos kohta on tukittu
+            // Jos reunapiste jää toisen reiän sisään, se ei ole oikea reuna (iso yhtenäinen aukko)
+            if (bumps.some(c => c !== b && c.broken && Math.abs(angleDiff(la, c.angle)) < c.holeHalf)) continue;
+            const er = wall(la).r, wa = la + rotation;
+            const ex = cx + er * Math.cos(wa), ey = cy + er * Math.sin(wa);
+            const dx = ball.x - ex, dy = ball.y - ey, d = Math.hypot(dx, dy);
+            if (d < capR && d > 0) {
+                const nx = dx / d, ny = dy / d;
+                const dot = ball.vx * nx + ball.vy * ny;
+                if (dot < 0) {
+                    ball.vx -= 2 * dot * nx; ball.vy -= 2 * dot * ny;
+                    if (ball.counted) { hitCount++; playSound("edge"); }
+                }
+                ball.x = ex + nx * (capR + 0.5);
+                ball.y = ey + ny * (capR + 0.5);
+            }
+        }
+    }
+}
+// Pallojen välinen kimpoaminen (yhtä massaiset, kimmoisa törmäys). Palauttaa true, jos pallot törmäsivät.
+function collideBalls(a, b) {
+    if (a.escaped || b.escaped) return false;
+    const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy), minD=a.r+b.r;
+    if (d>=minD || d===0) return false;
+    const nx=dx/d, ny=dy/d;
+    const rel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+    if (rel>0) { a.vx-=rel*nx; a.vy-=rel*ny; b.vx+=rel*nx; b.vy+=rel*ny; }
+    const push=(minD-d)/2+0.01;
+    a.x-=nx*push; a.y-=ny*push; b.x+=nx*push; b.y+=ny*push;
+    return true;
+}
+// Kaksi vihreää palloa yhdistyy: a jää jäljelle puolivälin kohtaan, suunta on nopeuksien summa
+function mergeBalls(a, b) {
+    if (a.escaped || b.escaped) return false;
+    if (Math.hypot(b.x-a.x, b.y-a.y) >= a.r+b.r) return false;
+    const sp=Math.hypot(a.vx,a.vy);
+    let vx=a.vx+b.vx, vy=a.vy+b.vy, m=Math.hypot(vx,vy);
+    if (m<0.01) { vx=a.vx; vy=a.vy; m=sp; }   // vastakkaiset suunnat: säilytä a:n suunta
+    a.vx=vx/m*sp; a.vy=vy/m*sp;
+    a.x=(a.x+b.x)/2; a.y=(a.y+b.y)/2;
+    playSound("merge");
+    return true;
+}
+// Vihreä pallo jakautuu kahtia: puolikkaat siirtyvät törmäyssuuntaan nähden sivuille ja lähtevät eri suuntiin
+const MAX_BALLS = 10;
+const SPLIT_COOLDOWN = 90; // alisteppiä (4 per ruutu)
+function splitBall(g, other) {
+    if (balls.length >= MAX_BALLS) { playSound("click"); return; }
+    const dx=g.x-other.x, dy=g.y-other.y, d=Math.hypot(dx,dy)||1;
+    const tx=-dy/d, ty=dx/d, off=12;
+    const sp=Math.hypot(g.vx,g.vy), ang=Math.atan2(g.vy,g.vx), spread=0.6;
+    const twin={...g, escaped:false, passing:false, trail:g.trail.slice()};
+    g.x+=tx*off; g.y+=ty*off;
+    twin.x-=tx*off; twin.y-=ty*off;
+    g.vx=Math.cos(ang+spread)*sp;    g.vy=Math.sin(ang+spread)*sp;
+    twin.vx=Math.cos(ang-spread)*sp; twin.vy=Math.sin(ang-spread)*sp;
+    // Jakautumisen jälkeen puolikkaat eivät hetkeen jakaudu uudelleen eivätkä yhdisty keskenään
+    g.cool=SPLIT_COOLDOWN; twin.cool=SPLIT_COOLDOWN;
+    balls.push(twin);
+    playSound("split");
+}
+// Vihreä pallo ei pakene reiästä: se pysähtyy reiän kohdalle ja muuttuu vihreäksi viivan pätkäksi
+const SEAL_STEPS = 150; // alisteppiä (4 per ruutu) ~0,6 s
+function startSeal(ball, bump) {
+    ball.sealing = true; ball.sealP = 0; ball.sealBump = bump;
+    ball.vx = 0; ball.vy = 0; ball.passing = false;
+}
+function updateSeal(ball) {
+    const bp = ball.sealBump;
+    const wa = bp.angle + rotation;
+    const tx = cx + radius * Math.cos(wa), ty = cy + radius * Math.sin(wa);
+    ball.x += (tx - ball.x) * 0.15; ball.y += (ty - ball.y) * 0.15;   // seuraa pyörivää reikää
+    ball.sealP += timeScale / SEAL_STEPS;
+    if (ball.sealP >= 1) {
+        seals.push({ angle: bp.angle, half: bp.holeHalf });
+        const k = bumps.indexOf(bp);
+        if (k >= 0) bumps.splice(k, 1);                                // reikä (ja sen kolhu) korvautuu suoralla pätkällä
+        ball.eaten = true;                                             // pallo poistuu pelistä
+        playSound("seal");
+    }
+}
+function stepBall(ball) {
+    ball.x+=ball.vx*speed*timeScale/12; ball.y+=ball.vy*speed*timeScale/12;
+    bounceFromHoleEdges(ball);
+    const dx=ball.x-cx, dy=ball.y-cy, distance=Math.hypot(dx,dy);
+    const angle=Math.atan2(dy,dx);
+    const w=wall(angle-rotation);
+    // Pallo on reiän läpi menossa: sen keskipiste on ollut reiän kohdalla seinän tasolla.
+    // Tällöin seinäkimmokkeita ei enää tarkisteta, vaikka pallo liukuisi vinosti reiän sivuun.
+    if(!ball.passing && holeAt(angle) && distance+ball.r>=w.r) {
+        if(!ball.counted) {                                     // jokainen poistuva vihreä pallo tukkii reiän
+            const local=angle-rotation;
+            const hb=bumps.find(b=>b.broken && Math.abs(angleDiff(local,b.angle))<b.holeHalf);
+            if(hb) { startSeal(ball, hb); return; }
+        }
+        ball.passing=true;
+    }
+    if(ball.passing) {
+        if(distance-ball.r>radius) {                            // kokonaan kehän ulkopuolella
+            ball.escaped=true;
+            playSound(ball.counted?"escape":"escapeSoft");
+        }
+        else if(distance+ball.r<w.r-4) ball.passing=false;     // reunasta takaisin sisään
+        return;
+    }
+    if(holeAt(angle)) return;
+    if(distance+ball.r>=w.r) bounce(ball, angle);
+}
+// Oranssin liike: pomppii kehän ulkopuolella (ja kankaan reunoissa), pääsee sisään ja ulos vain reiästä
+function stepOrange(ball) {
+    ball.x+=ball.vx*speed*timeScale/12; ball.y+=ball.vy*speed*timeScale/12;
+    const lo=ball.r, hi=700-ball.r;
+    if(ball.x<lo) { ball.x=lo; ball.vx=Math.abs(ball.vx); }
+    if(ball.x>hi) { ball.x=hi; ball.vx=-Math.abs(ball.vx); }
+    if(ball.y<lo) { ball.y=lo; ball.vy=Math.abs(ball.vy); }
+    if(ball.y>hi) { ball.y=hi; ball.vy=-Math.abs(ball.vy); }
+    bounceFromHoleEdges(ball);
+    const dx=ball.x-cx, dy=ball.y-cy, distance=Math.hypot(dx,dy);
+    const angle=Math.atan2(dy,dx), w=wall(angle-rotation), hole=holeAt(angle);
+    if(!ball.passing) {
+        const touching = ball.inside ? distance+ball.r>=w.r : distance-ball.r<=w.r;
+        if(!touching) return;
+        if(hole) { ball.passing=true; ball.fromInside=ball.inside; }
+        else bounce(ball, angle);
+        return;
+    }
+    if(ball.fromInside) {
+        if(distance-ball.r>radius) { ball.inside=false; ball.passing=false; }   // ulos kehältä
+        else if(distance+ball.r<w.r-4) ball.passing=false;                       // takaisin sisään
+    } else {
+        if(distance+ball.r<radius-26) { ball.inside=true; ball.passing=false; }   // kokonaan sisällä
+        else if(distance-ball.r>radius) ball.passing=false;                       // takaisin ulos
+    }
+}
+// Lähin käyttökelpoinen reikä: maailmankulma ja kulmaero pallon kulmaan
+function nearestHole(angleNow) {
+    let best = null, bd = 1e9;
+    for (const b of bumps) {
+        if (!b.broken || sealAt(b.angle)) continue;
+        const wa = b.angle + rotation, d = angleDiff(wa, angleNow);
+        if (Math.abs(d) < bd) { bd = Math.abs(d); best = { wa, d }; }
+    }
+    return best;
+}
+// Punainen ei kimpoa seinistä vaan liukuu niitä pitkin ja ohjaa itsensä
+function slideFromWall(ball, angle, wr) {
+    const ca = Math.cos(angle), sa = Math.sin(angle);
+    const target = ball.inside ? wr - ball.r - 1 : wr + ball.r + 1;
+    ball.x = cx + ca * target; ball.y = cy + sa * target;
+    const vr = ball.vx * ca + ball.vy * sa;
+    if (ball.inside ? vr > 0 : vr < 0) { ball.vx -= vr * ca; ball.vy -= vr * sa; }
+}
+function stepRed(ball) {
+    const dx0 = ball.x - cx, dy0 = ball.y - cy, dist0 = Math.hypot(dx0, dy0) || 1;
+    const ux = dx0 / dist0, uy = dy0 / dist0;
+    const S = (ball.inside || ball.passing) ? RED_IN_SPEED : RED_SPEED;
+    let dvx, dvy;
+    if (ball.inside || ball.passing) {
+        dvx = -ux * S; dvy = -uy * S;                          // kohti keskipistettä
+    } else {
+        const h = nearestHole(Math.atan2(dy0, dx0));
+        if (h && Math.abs(h.d) < (ball.diving ? 0.12 : 0.07)) {
+            ball.diving = true;                                // reiän kohdalla: sukellus sisään
+            const tr = radius - 60, px = cx + tr * Math.cos(h.wa), py = cy + tr * Math.sin(h.wa);
+            const ddx = px - ball.x, ddy = py - ball.y, dd = Math.hypot(ddx, ddy) || 1;
+            dvx = ddx / dd * S; dvy = ddy / dd * S;
+        } else {
+            ball.diving = false;                               // kierto ulkopuolella (kohti reikää, jos sellainen on)
+            const dir = RED_DIR;                               // kiertää aina vastapäivään, reikä tulee vastaan kierroksen aikana
+            const radial = Math.max(-1, Math.min(1, (RED_ORBIT - dist0) * 0.05));
+            dvx = -uy * dir * S + ux * radial * S;
+            dvy =  ux * dir * S + uy * radial * S;
+        }
+    }
+    ball.vx += (dvx - ball.vx) * RED_STEER; ball.vy += (dvy - ball.vy) * RED_STEER;
+
+    ball.x += ball.vx * speed * timeScale / 12; ball.y += ball.vy * speed * timeScale / 12;
+    const lo = ball.r, hi = 700 - ball.r;
+    if (ball.x < lo) { ball.x = lo; ball.vx = Math.abs(ball.vx); }
+    if (ball.x > hi) { ball.x = hi; ball.vx = -Math.abs(ball.vx); }
+    if (ball.y < lo) { ball.y = lo; ball.vy = Math.abs(ball.vy); }
+    if (ball.y > hi) { ball.y = hi; ball.vy = -Math.abs(ball.vy); }
+    bounceFromHoleEdges(ball);
+
+    const dx = ball.x - cx, dy = ball.y - cy, distance = Math.hypot(dx, dy);
+    const angle = Math.atan2(dy, dx), w = wall(angle - rotation), hole = holeAt(angle);
+    if (!ball.passing) {
+        const touching = ball.inside ? distance + ball.r >= w.r : distance - ball.r <= w.r;
+        if (touching) {
+            if (hole) { ball.passing = true; ball.fromInside = ball.inside; }
+            else slideFromWall(ball, angle, w.r);
+        }
+    } else if (ball.fromInside) {
+        if (distance - ball.r > radius) { ball.inside = false; ball.passing = false; }
+        else if (distance + ball.r < w.r - 4) ball.passing = false;
+    } else {
+        if (distance + ball.r < radius - 26) { ball.inside = true; ball.passing = false; }
+        else if (distance - ball.r > radius) ball.passing = false;
+    }
+    // perillä: täsmälleen keskipisteessä räjähtää
+    if (ball.inside && !ball.passing && distance < 6) { redArrived = true; ball.eaten = true; }
+}
+// Kontakti toiseen palloon: kevyt punainen kimpoaa kauas, toinen pallo ei häiriinny
+const sideIn = b => (b.orange || b.red) ? b.inside : !b.escaped;
+function knockRed(r, o) {
+    const dx = r.x - o.x, dy = r.y - o.y, d = Math.hypot(dx, dy);
+    if (d >= r.r + o.r) return;
+    if (!(sideIn(r) === sideIn(o) || r.passing || o.passing)) return; // eri puolilla kehää
+    const nx = d > 0 ? dx / d : 1, ny = d > 0 ? dy / d : 0;
+    r.vx = nx * RED_KNOCK; r.vy = ny * RED_KNOCK;
+    r.x = o.x + nx * (r.r + o.r + 1); r.y = o.y + ny * (r.r + o.r + 1);
+    playSound("click");
+}
+function eat(o, v) {
+    v.eaten = true;
+    lastOrange = o;
+    o.flash = 20;
+    if (v.counted) yellowEaten = true;
+    playSound("eat");
+}
+
+// ---------- Pelin kulku ----------
+const GAME_MS = 120000;   // peliaika
+const PAUSE_MS = 2500;    // kuinka kauan napautus pysäyttää kehän pyörimisen
+const timerEl = document.getElementById("timer");
+const resultEl = document.getElementById("result");
+const resultTextEl = document.getElementById("resultText");
+let gameOver = false, timeLeft = GAME_MS, lastTs = null, pauseLeft = 0, restartDelay = 0, shownSecs = -1;
+
+function updateTimer() {
+    const secs = Math.max(0, Math.ceil(timeLeft / 1000));
+    if (secs === shownSecs) return;
+    shownSecs = secs;
+    timerEl.textContent = "Aika: " + secs + " s";
+    timerEl.classList.toggle("low", secs <= 10);
+}
+// ---------- Hidastettu loppuhetki ja zoomaus ----------
+const FINALE_MS = 2200;    // loppuhetken kesto (oikeaa aikaa)
+const FINALE_SLOW = 0.15;  // pelin nopeus hidastuksessa
+const FINALE_ZOOM = 2.2;   // zoomauksen suuruus
+let timeScale = 1, finale = null, zoom = 1, camX = cx, camY = cy;
+function startFinale(winner) {
+    finale = { winner, t: 0 };
+    if (winner === "red") { explosion = { t: 0 }; playSound("explode"); }
+    else playSound("slowmo");
+}
+// Punaisen räjähdys: valonvälähdys ja laajenevat shokkirenkaat kehän keskipisteestä
+function drawExplosion() {
+    const t = explosion.t / 1000;
+    if (t < 0.35) {
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 220);
+        g.addColorStop(0, "rgba(255,255,255," + (0.9 * (1 - t / 0.35)) + ")");
+        g.addColorStop(1, "rgba(239,68,68,0)");
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 220, 0, Math.PI * 2); ctx.fill();
+    }
+    const cols = ["#ffffff", "#ef4444", "#fb923c"];
+    for (let k = 0; k < 3; k++) {
+        const tt = t - k * 0.12;
+        if (tt <= 0) continue;
+        const alpha = Math.max(0, 1 - tt / 1.6);
+        if (alpha <= 0) continue;
+        ctx.globalAlpha = alpha; ctx.strokeStyle = cols[k]; ctx.lineWidth = 10 - 3 * k;
+        ctx.beginPath(); ctx.arc(cx, cy, tt * 380, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+}
+// Mihin kamera tarkentaa: ratkaisevaan palloon tai kohtaan
+function focusPoint(w) {
+    if (w === "yellow") return ball1;
+    if (w === "orange") return lastOrange;
+    if (w === "red") return { x: cx, y: cy };
+    const g = balls.find(b => !b.counted && !b.orange && !b.red && !b.escaped && !b.eaten);
+    if (g) return g;
+    const sl = seals[seals.length - 1];
+    if (sl) { const a = sl.angle + rotation; return { x: cx + radius * Math.cos(a), y: cy + radius * Math.sin(a) }; }
+    return { x: cx, y: cy };
+}
+function endGame(winner) {
+    gameOver = true;
+    restartDelay = 700; // estää vahingossa tapahtuvan uudelleenaloituksen
+    resultEl.className = winner;
+    resultTextEl.textContent = { green: "Vihreä voittaa!", yellow: "Keltainen voittaa!", orange: "Oranssi voittaa!", red: "Punainen voittaa!" }[winner];
+    resultEl.style.display = "flex";
+    playSound({ green: "win", yellow: "winYellow", orange: "winOrange", red: "winRed" }[winner]);
+}
+// Nopeusbuusti: tuplanapautus kiihdyttää hitaasti liikkuvia palloja. Nopeasti liikkuviin ei vaikuta.
+const SLOW_LIMIT = 1.5;      // tätä hitaampi (ryömivä) pallo saa buustin; lähtönopeus on 3,2
+const BOOST = 1.6;           // buustin kerroin
+const BOOST_MIN = 3.2;       // buustattu pallo saa vähintään lähtönopeuden
+const DOUBLE_TAP_MS = 300;
+let lastTap = -1e9;
+function boostSlowBalls() {
+    let any = false;
+    for (const b of balls) {
+        if (b.escaped || b.sealing || b.red) continue;
+        const m = Math.hypot(b.vx, b.vy);
+        if (m < SLOW_LIMIT) {
+            // kerroin tai vähintään lähtönopeus, kumpi on suurempi; paikallaan oleva pallo saa satunnaisen suunnan
+            const target = Math.max(m * BOOST, BOOST_MIN);
+            let ux, uy;
+            if (m > 0.05) { ux = b.vx / m; uy = b.vy / m; }
+            else { const a = Math.random() * Math.PI * 2; ux = Math.cos(a); uy = Math.sin(a); }
+            b.vx = ux * target; b.vy = uy * target;
+            b.flash = 20; any = true;
+        }
+    }
+    if (any) playSound("boost");
+}
+// Napautus pysäyttää kehän pyörimisen hetkeksi, tuplanapautus antaa nopeusbuustin;
+// pelin päätyttyä napautus aloittaa uuden pelin
+document.addEventListener("pointerdown", e => {
+    if (e.target === soundBtn) return;
+    if (gameOver) { if (restartDelay <= 0) location.reload(); return; }
+    if (finale) return;
+    const now = performance.now();
+    if (now - lastTap < DOUBLE_TAP_MS) {
+        boostSlowBalls();
+        pauseLeft = 0;      // tuplanapautus on oma eleensä: kehä jatkaa pyörimistä
+        lastTap = -1e9;
+    } else {
+        pauseLeft = PAUSE_MS;
+        lastTap = now;
+    }
+});
+
+function animate(ts) {
+    if (lastTs === null) lastTs = ts;
+    const dt = Math.min(100, ts - lastTs); lastTs = ts;
+
+    if (!gameOver) {
+        if (!finale) timeLeft -= dt;
+        if (pauseLeft > 0) pauseLeft -= dt;
+        timeScale += ((finale ? FINALE_SLOW : 1) - timeScale) * 0.12;
+        // pyöriminen hidastuu ja kiihtyy pehmeästi
+        rotSpeed += ((pauseLeft > 0 ? 0 : rotationSpeed) - rotSpeed) * 0.12;
+        rotation += rotSpeed * timeScale;
+        updateTimer();
+
+        for(let i=0;i<4;i++) {
+            for(const b of balls) { if(b.cool>0) b.cool--; if(b.sealing) updateSeal(b); else if(!b.escaped) (b.red ? stepRed(b) : b.orange ? stepOrange(b) : stepBall(b)); }
+            for(let i=0;i<balls.length;i++) for(let j=i+1;j<balls.length;j++) {
+                const a=balls[i], b=balls[j];
+                if(a.eaten || b.eaten || a.sealing || b.sealing) continue;
+                if(a.red || b.red) {
+                    if(a.red && b.red) continue;
+                    const rd = a.red ? a : b, ot = a.red ? b : a;
+                    // oranssi syö kehän sisällä myös punaisen; muut vain kimpoittavat sen
+                    if(ot.orange && ot.inside && !ot.passing && rd.inside && !rd.passing && Math.hypot(rd.x-ot.x, rd.y-ot.y) < rd.r+ot.r) eat(ot, rd);
+                    else knockRed(rd, ot);
+                    continue;
+                }
+                if(a.orange || b.orange) {
+                    // oranssi syö kehän sisällä osuessaan keltaiseen tai vihreään; muuten ei vuorovaikutusta
+                    const o = a.orange ? a : b, v = a.orange ? b : a;
+                    if(o.inside && !o.passing && !v.escaped && !v.orange && !v.red && Math.hypot(v.x-o.x, v.y-o.y) < o.r+v.r) eat(o, v);
+                    continue;
+                }
+                if(!a.counted && !b.counted) {
+                    if(a.cool>0 || b.cool>0) collideBalls(a,b);            // tuore jakautuminen: vain kimpoavat
+                    else if(mergeBalls(a,b)) { balls.splice(j,1); j--; }  // muuten yhdistyvät yhdeksi palloksi
+                    continue;
+                }
+                if(collideBalls(a,b)) {
+                    // keltaisen ja vihreän törmäys: vihreä jakautuu aina kahtia (kerran per törmäys)
+                    const g = a.counted ? b : a, y = a.counted ? a : b;
+                    if(g.cool<=0) splitBall(g,y); else playSound("click");
+                }
+            }
+            for(let k=balls.length-1;k>=0;k--) if(balls[k].eaten) balls.splice(k,1);
+        }
+        // Poista kauas karanneet vihreät pallot
+        for(let i=balls.length-1;i>=0;i--) {
+            const b=balls[i];
+            if(b.escaped && !b.counted && Math.hypot(b.x-cx,b.y-cy)>1200) balls.splice(i,1);
+        }
+        for(const b of balls) if(b.escaped) { b.x+=b.vx*speed*timeScale/3; b.y+=b.vy*speed*timeScale/3; }
+
+        if (!finale) {
+            if (redArrived) startFinale("red");                                // punainen perillä keskipisteessä
+            else if (ball1.escaped) startFinale("yellow");
+            else if (yellowEaten && greensInPlay() === 0 && !redInRing()) startFinale("orange"); // keltainen syöty eikä vihreitä enää kehässä
+            else if (timeLeft <= 0) startFinale("green");                      // vihreä voittaa aina ajan loppuessa
+        } else {
+            finale.t += dt;
+            if (finale.t >= FINALE_MS) { const w = finale.winner; finale = null; endGame(w); }
+        }
+    } else if (restartDelay > 0) restartDelay -= dt;
+
+    if (explosion) explosion.t += dt;
+
+    // Kamera: loppuhetkessä zoomaa ratkaisevaan kohtaan, pelin päätyttyä palaa takaisin
+    let zt = 1, tx = cx, ty = cy;
+    if (finale) { const f = focusPoint(finale.winner); tx = f.x; ty = f.y; zt = FINALE_ZOOM; }
+    zoom += (zt - zoom) * 0.06; camX += (tx - camX) * 0.08; camY += (ty - camY) * 0.08;
+
+    ctx.clearRect(0,0,700,700);
+    ctx.save();
+    ctx.translate(350,350); ctx.scale(zoom,zoom); ctx.translate(-camX,-camY);
+    drawCircle();
+    for(const b of balls) {
+        if(!gameOver) {
+            b.trail.push({x:b.x,y:b.y});
+            if(b.trail.length>TRAIL_LEN) b.trail.shift();
+        }
+        drawTrail(b);
+        let rr = b.r;
+        if(b.sealing) {
+            const p=Math.min(1,b.sealP), ang=b.sealBump.angle+rotation, half=b.sealBump.holeHalf*p;
+            ctx.strokeStyle=SEAL_GREEN; ctx.lineWidth=7; ctx.lineCap="round";
+            ctx.shadowColor="#168bff"; ctx.shadowBlur=13;
+            ctx.beginPath(); ctx.arc(cx,cy,radius,ang-half,ang+half); ctx.stroke();
+            ctx.shadowBlur=0;
+            rr = b.r*(1-p);
+        }
+        ctx.beginPath(); ctx.arc(b.x,b.y,rr,0,Math.PI*2);
+        ctx.fillStyle=b.color; ctx.shadowColor=b.color; ctx.shadowBlur=22;
+        ctx.fill(); ctx.shadowBlur=0;
+        if(b.flash>0) { // buustin rengas
+            ctx.strokeStyle="#ffffff"; ctx.globalAlpha=b.flash/20; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.arc(b.x,b.y,b.r+(20-b.flash)*0.9+2,0,Math.PI*2); ctx.stroke();
+            ctx.globalAlpha=1;
+            if(!gameOver) b.flash--;
+        }
+    }
+    if (explosion) drawExplosion();
+    ctx.restore();
+    // Vinjetti tummentaa reunat zoomauksen aikana
+    const zp = Math.min(1, (zoom - 1) / (FINALE_ZOOM - 1));
+    if (zp > 0.01) {
+        const gr = ctx.createRadialGradient(350, 350, 140, 350, 350, 520);
+        gr.addColorStop(0, "rgba(5,8,23,0)");
+        gr.addColorStop(1, "rgba(5,8,23," + (0.6 * zp) + ")");
+        ctx.fillStyle = gr; ctx.fillRect(0, 0, 700, 700);
+    }
+    requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
 </script>
-
 </body>
 </html>
