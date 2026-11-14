@@ -135,10 +135,12 @@ body {
 #hint1 { animation-delay: 0.6s; }
 #hint2 { animation-delay: 4.6s; }
 /* Voittosäännöt: yksi kerrallaan, pallon omalla värillä */
-#hint3 { --c: #facc15; animation-delay: 8.6s; }
-#hint4 { --c: #34d399; animation-delay: 12.6s; }
-#hint5 { --c: #fb923c; animation-delay: 16.6s; animation-duration: 5.2s; }
-#hint6 { --c: #ef4444; animation-delay: 22.2s; animation-duration: 5.2s; }
+#hint7 { animation-delay: 8.6s; }
+#hint3 { --c: #facc15; animation-delay: 12.6s; }
+#hint4 { --c: #34d399; animation-delay: 16.6s; }
+#hint5 { --c: #fb923c; animation-delay: 20.6s; animation-duration: 5.2s; }
+#hint6 { --c: #ef4444; animation-delay: 26.2s; animation-duration: 5.2s; }
+#hint8 { --c: #e879f9; animation-delay: 31.8s; animation-duration: 5.2s; }
 @keyframes hintShow {
     0%   { opacity: 0; transform: translateX(-50%) translateY(8px); }
     12%  { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -194,18 +196,21 @@ canvas {
 <button id="sound" type="button">🔇 Ääni pois – napauta</button>
 <div id="result"><div id="resultText"></div><div id="resultHint">Napauta pelataksesi uudelleen</div></div>
 <div id="hint1" class="hint">Napauta pysäyttääksesi pyöriminen</div>
-<div id="hint2" class="hint">Tuplanapauta kiihdyttääksesi hitaita palloja</div>
+<div id="hint2" class="hint">Tuplanapauta pyöräyttääksesi kehää eteenpäin</div>
+<div id="hint7" class="hint">Triplanapauta kiihdyttääksesi hitaita palloja</div>
 <div id="hint3" class="hint">Keltainen voittaa karatessaan kehästä</div>
 <div id="hint4" class="hint">Vihreä voittaa ajan loppuessa</div>
 <div id="hint5" class="hint">Oranssi voittaa päästessään kehään ja syödessään muut pallot</div>
 <div id="hint6" class="hint">Punainen voittaa päästessään kehän keskipisteeseen</div>
+<div id="hint8" class="hint">Valuva kimalteleva pallo antaa supervoiman sen poimivalle</div>
 <canvas id="canvas" width="700" height="700"></canvas>
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const cx = 350, cy = 350, radius = 230;
 const rotationSpeed = 0.0015;
-let rotation = 0, rotSpeed = rotationSpeed, speed = 4.5;
+let rotation = 0, rotSpeed = rotationSpeed;
+let speed = 3.7; // pallojen yleinen nopeuskerroin (alkuperäinen 4,5); pienempi = hitaampi, vaikuttaa kaikkiin palloihin
 const bumps = [];
 const hitColors = ["#facc15", "#fb7185", "#a78bfa"];
 
@@ -216,15 +221,32 @@ let hitCount = 0; // vain äänen sävelkorkeutta varten, ei näytetä
 let audioCtx = null, masterGain = null, soundOn = false, soundTouched = false;
 const lastPlay = {};
 const SCALE = [0, 2, 4, 7, 9]; // pentatoninen asteikko: kimmokkeet soivat sopusointuisesti
-function initAudio() {
-    if (!audioCtx) {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return false;
+// Äänikonteksti ja sen raskaat osat valmistellaan etukäteen (heti sivun latauduttua), ei vasta ensimmäisessä napautuksessa:
+// kontekstin luominen voi pysäyttää puhelimen pääsäikeen hetkeksi. Napautuksessa tarvitaan enää resume().
+let noiseBuf = null;
+function prepareAudio() {
+    if (audioCtx) return true;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    try {
         audioCtx = new AC();
         masterGain = audioCtx.createGain();
         masterGain.gain.value = 0.25;
         masterGain.connect(audioCtx.destination);
-    }
+        const len = audioCtx.sampleRate;                 // valmis 1 s valkoinen kohina, jota kaikki kohinaäänet käyttävät
+        noiseBuf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        // lämmittely: mykistetty ääni, jotta ensimmäinen oikea ääni ei viivästä
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        g.gain.value = 0; o.connect(g); g.connect(masterGain); o.start(0); o.stop(0.01);
+        const src = audioCtx.createBufferSource();
+        src.buffer = noiseBuf; src.connect(g); src.start(0); src.stop(0.01);
+    } catch (e) { audioCtx = null; return false; }
+    return true;
+}
+function initAudio() {
+    if (!prepareAudio()) return false;
     if (audioCtx.state === "suspended") audioCtx.resume();
     return true;
 }
@@ -240,12 +262,12 @@ function tone(freq, dur, type, vol, toFreq) {
     o.start(t); o.stop(t + dur + 0.02);
 }
 function noise(dur, vol) {
-    const len = Math.floor(audioCtx.sampleRate * dur);
-    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-    const src = audioCtx.createBufferSource(), g = audioCtx.createGain();
-    src.buffer = buf; g.gain.value = vol;
-    src.connect(g); g.connect(masterGain); src.start();
+    const t = audioCtx.currentTime, src = audioCtx.createBufferSource(), g = audioCtx.createGain();
+    src.buffer = noiseBuf;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    src.connect(g); g.connect(masterGain);
+    src.start(t); src.stop(t + dur);
 }
 function playSound(name) {
     if (!soundOn || !audioCtx) return;
@@ -269,6 +291,9 @@ function playSound(name) {
         case "winYellow": [392, 523, 659, 784, 1046].forEach((f, i) => setTimeout(() => { if (soundOn) tone(f, 0.22, "square", 0.18); }, i * 90)); break;
         case "win": [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => { if (soundOn) tone(f, 0.28, "triangle", 0.4); }, i * 120)); break;
         case "boost": tone(300, 0.25, "sawtooth", 0.22, 950); noise(0.12, 0.1); break;
+        case "powerSpawn": tone(1200, 0.25, "sine", 0.12, 1600); break;
+        case "power": [660, 880, 1320, 1760].forEach((f, i) => setTimeout(() => { if (soundOn) tone(f, 0.18, "sine", 0.28); }, i * 55)); break;
+        case "spin": tone(180, 0.3, "sawtooth", 0.18, 760); noise(0.15, 0.06); break;
         case "explode": noise(0.7, 0.6); tone(110, 0.7, "sine", 0.8, 30); break;
         case "winRed": [262, 330, 392, 523, 392, 523].forEach((f, i) => setTimeout(() => { if (soundOn) tone(f, 0.3, "triangle", 0.35); }, i * 110)); break;
         case "slowmo": tone(520, 0.8, "sine", 0.25, 80); noise(0.25, 0.08); break;
@@ -291,6 +316,7 @@ function firstTouch(e) {
 }
 document.addEventListener("pointerdown", firstTouch);
 document.addEventListener("keydown", firstTouch);
+setTimeout(prepareAudio, 400);   // valmistele ääni heti latauksen jälkeen, ennen ensimmäistä napautusta
 
 // ---------- Jälkivana ----------
 const TRAIL_LEN = 22;
@@ -383,6 +409,16 @@ function wall(angle) {
 // Vihreän pallon tukkimat reiät: pysyviä, rikkoutumattomia vihreitä kehän pätkiä (kehän omassa kulmassa)
 const seals = [];
 const SEAL_GREEN = "#34d399";
+// Vihreän supervoima: osumakohtaan syntyy tuhoutumaton vihreä alue, enintään GREEN_POWER_MAX kohtaa
+const GREEN_POWER_MAX = 10, GREEN_SEAL_HALF = 0.07;
+let greenPowerUses = 0;
+function greenSeal(localAngle) {
+    seals.push({ angle: localAngle, half: GREEN_SEAL_HALF });
+    for (let i = bumps.length - 1; i >= 0; i--)           // alueen sisäiset kolhut ja reiät poistuvat
+        if (Math.abs(angleDiff(bumps[i].angle, localAngle)) < GREEN_SEAL_HALF) bumps.splice(i, 1);
+    greenPowerUses++;
+    if (greenPowerUses >= GREEN_POWER_MAX) for (const b of balls) if (b.power === "green") b.power = null; // supervoima loppuu
+}
 function sealAt(localAngle) {
     return seals.some(sl => Math.abs(angleDiff(localAngle, sl.angle)) < sl.half);
 }
@@ -410,15 +446,15 @@ function drawCircle() {
     if(drawing) ctx.stroke();
     ctx.shadowBlur=0;
 }
-function damageBump(a) {
+function damageBump(a, inc = 1) {
     if(sealAt(a)) return null;   // tukittua kohtaa ei voi kolhia eikä rikkoa
     let bump=findBump(a);
     if(!bump) {
         bump={angle:a,hits:0,depth:0,width:0.035,color:hitColors[0],broken:false,holeHalf:0.1};
         bumps.push(bump);
     }
-    bump.hits++;
-    bump.depth=Math.min(24,bump.depth+6);
+    bump.hits=Math.min(3,bump.hits+inc);   // keltaisen supervoima: kaksinkertainen lommo (inc = 2)
+    bump.depth=6*bump.hits;
     bump.color=hitColors[(bump.hits-1)%hitColors.length];
     if(bump.hits>=3) bump.broken=true;
     return bump;
@@ -441,7 +477,8 @@ function bounce(ball, worldAngle) {
     const a=worldAngle-rotation;
     let snd=null;
     if(ball.orange) snd="orange";                       // oranssi ei kolhi eikä korjaa kehää
-    else if(ball.counted) { const bp=damageBump(a); snd=(bp && bp.broken)?"break":"hit"; }
+    else if(ball.counted) { const bp=damageBump(a, ball.power==="yellow"?2:1); snd=(bp && bp.broken)?"break":"hit"; }
+    else if(ball.power==="green" && greenPowerUses<GREEN_POWER_MAX) { if(!sealAt(a)) greenSeal(a); snd="seal"; }
     else if(healBump(a)) snd="heal";
     const outward = ball.orange && !ball.inside;        // ulkopuolinen oranssi kimpoaa kehän ulkopinnasta
 
@@ -459,7 +496,7 @@ function bounce(ball, worldAngle) {
     const rr = outward ? r+ball.r+2 : r-ball.r-2;
     ball.x=cx+Math.cos(worldAngle)*rr;
     ball.y=cy+Math.sin(worldAngle)*rr;
-    if(ball.counted) { speed+=0.002; hitCount++; }
+    if(ball.counted) hitCount++;
     if(snd) playSound(snd);
 }
 // Onko tässä kulmassa reikä (ei seinää)?
@@ -515,6 +552,7 @@ function mergeBalls(a, b) {
     if (m<0.01) { vx=a.vx; vy=a.vy; m=sp; }   // vastakkaiset suunnat: säilytä a:n suunta
     a.vx=vx/m*sp; a.vy=vy/m*sp;
     a.x=(a.x+b.x)/2; a.y=(a.y+b.y)/2;
+    if (!a.power) a.power = b.power;
     playSound("merge");
     return true;
 }
@@ -609,6 +647,19 @@ function stepOrange(ball) {
         else if(distance-ball.r>radius) ball.passing=false;                       // takaisin ulos
     }
 }
+// Punainen havaitsee supervoimapallon: vauhti kaksinkertaistuu hetkeksi ja kiertosuunta valitaan niin,
+// että se voi tavoittaa pallon (lyhyin tie kohtaan, jossa valuva pallo ylittää punaisen kiertoradan)
+const RED_BOOST_MS = 4000;
+let redBoostLeft = 0;
+function powerTargetAngle() {
+    if (!powerBall) return null;
+    const dxp = powerBall.x - cx;
+    if (Math.abs(dxp) >= RED_ORBIT) return null;
+    const h = Math.sqrt(RED_ORBIT * RED_ORBIT - dxp * dxp);
+    const yt = cy - h, yb = cy + h;                       // kiertoradan ylitys- ja poistumiskohta
+    const ty = powerBall.y < yt ? yt : (powerBall.y < yb ? yb : null);
+    return ty === null ? null : Math.atan2(ty - cy, dxp);
+}
 // Lähin käyttökelpoinen reikä: maailmankulma ja kulmaero pallon kulmaan
 function nearestHole(angleNow) {
     let best = null, bd = 1e9;
@@ -636,7 +687,15 @@ function stepRed(ball) {
         dvx = -ux * S; dvy = -uy * S;                          // kohti keskipistettä
     } else {
         const h = nearestHole(Math.atan2(dy0, dx0));
-        if (h && Math.abs(h.d) < (ball.diving ? 0.12 : 0.07)) {
+        const pt = powerTargetAngle();
+        if (pt !== null) {
+            ball.diving = false;                               // jahtaa supervoimapalloa kiertoradalla
+            const sp = redBoostLeft > 0 ? S * 2 : S;
+            const dir = Math.sign(angleDiff(pt, Math.atan2(dy0, dx0))) || RED_DIR;
+            const radial = Math.max(-1, Math.min(1, (RED_ORBIT - dist0) * 0.05));
+            dvx = -uy * dir * sp + ux * radial * sp;
+            dvy =  ux * dir * sp + uy * radial * sp;
+        } else if (h && Math.abs(h.d) < (ball.diving ? 0.12 : 0.07)) {
             ball.diving = true;                                // reiän kohdalla: sukellus sisään
             const tr = radius - 60, px = cx + tr * Math.cos(h.wa), py = cy + tr * Math.sin(h.wa);
             const ddx = px - ball.x, ddy = py - ball.y, dd = Math.hypot(ddx, ddy) || 1;
@@ -687,6 +746,15 @@ function knockRed(r, o) {
     r.vx = nx * RED_KNOCK; r.vy = ny * RED_KNOCK;
     r.x = o.x + nx * (r.r + o.r + 1); r.y = o.y + ny * (r.r + o.r + 1);
     playSound("click");
+}
+// Punaisen supervoima: superpainava, muut pallot eivät voi töniä sitä vaan kimpoavat siitä kuin seinästä
+function bounceOffHeavy(r, o) {
+    const dx = o.x - r.x, dy = o.y - r.y, d = Math.hypot(dx, dy), minD = r.r + o.r;
+    if (d >= minD || d === 0) return;
+    if (!(sideIn(r) === sideIn(o) || r.passing || o.passing)) return;
+    const nx = dx / d, ny = dy / d, dot = o.vx * nx + o.vy * ny;
+    if (dot < 0) { o.vx -= 2 * dot * nx; o.vy -= 2 * dot * ny; }
+    o.x = r.x + nx * (minD + 1); o.y = r.y + ny * (minD + 1);
 }
 function eat(o, v) {
     v.eaten = true;
@@ -763,9 +831,10 @@ function endGame(winner) {
 // Nopeusbuusti: tuplanapautus kiihdyttää hitaasti liikkuvia palloja. Nopeasti liikkuviin ei vaikuta.
 const SLOW_LIMIT = 1.5;      // tätä hitaampi (ryömivä) pallo saa buustin; lähtönopeus on 3,2
 const BOOST = 1.6;           // buustin kerroin
-const BOOST_MIN = 3.2;       // buustattu pallo saa vähintään lähtönopeuden
-const DOUBLE_TAP_MS = 300;
-let lastTap = -1e9;
+const BOOST_MIN = 3.8;       // buustattu pallo saa vähintään tämän nopeuden (lähtönopeus on 3,2)
+const TAP_WINDOW_MS = 300;                 // napautukset tämän ikkunan sisällä lasketaan yhdeksi eleeksi
+const SPIN_ANGLE = Math.PI / 4;            // tuplanapautus: 1/8 kierrosta eteenpäin
+let spinLeft = 0, tapCount = 0, tapTimer = null;
 function boostSlowBalls() {
     let any = false;
     for (const b of balls) {
@@ -783,34 +852,97 @@ function boostSlowBalls() {
     }
     if (any) playSound("boost");
 }
-// Napautus pysäyttää kehän pyörimisen hetkeksi, tuplanapautus antaa nopeusbuustin;
-// pelin päätyttyä napautus aloittaa uuden pelin
+// Napautukset: yksi pysäyttää kehän pyörimisen hetkeksi, kaksi pyöräyttää kehää nopeasti 1/8 kierrosta eteenpäin,
+// kolme kiihdyttää hitaita palloja. Ele ratkaistaan, kun napautukset loppuvat (tai kolmas napautus tulee).
+// Pelin päätyttyä napautus aloittaa uuden pelin.
+function resolveTaps() {
+    const n = tapCount;
+    tapCount = 0; tapTimer = null;
+    if (gameOver || finale) return;
+    if (n === 1) pauseLeft = PAUSE_MS;
+    else if (n === 2) { spinLeft = Math.min(spinLeft + SPIN_ANGLE, 2 * SPIN_ANGLE); pauseLeft = 0; playSound("spin"); }
+    else boostSlowBalls();
+}
 document.addEventListener("pointerdown", e => {
     if (e.target === soundBtn) return;
     if (gameOver) { if (restartDelay <= 0) location.reload(); return; }
     if (finale) return;
-    const now = performance.now();
-    if (now - lastTap < DOUBLE_TAP_MS) {
-        boostSlowBalls();
-        pauseLeft = 0;      // tuplanapautus on oma eleensä: kehä jatkaa pyörimistä
-        lastTap = -1e9;
-    } else {
-        pauseLeft = PAUSE_MS;
-        lastTap = now;
-    }
+    tapCount++;
+    clearTimeout(tapTimer);
+    if (tapCount >= 3) resolveTaps();
+    else tapTimer = setTimeout(resolveTaps, TAP_WINDOW_MS);
 });
 
-function animate(ts) {
-    if (lastTs === null) lastTs = ts;
-    const dt = Math.min(100, ts - lastTs); lastTs = ts;
+// ---------- Supervoimapallo ----------
+// Valuu ylhäältä alas ruudun läpi kehästä välittämättä, muutaman kerran pelin aikana.
+// Kun joku pallo poimii sen, uusia ei enää tule. Poimija saa värikkään reunuksen ja pallon värin mukaisen supervoiman.
+const POWER_R = 10, POWER_SPEED = 0.13;   // 0,13 px/ms eli noin 5 s ruudun läpi
+const powerTimes = [8000 + Math.random() * 27000, 40000 + Math.random() * 35000, 80000 + Math.random() * 28000];
+let powerBall = null, powerTaken = false, animT = 0;
+function givePower(b) {
+    if (b.red) b.power = "red";
+    else if (b.orange) { b.power = "orange"; b.vx *= 2; b.vy *= 2; }   // nopeus kaksinkertaistuu
+    else if (b.counted) b.power = "yellow";
+    else b.power = "green";
+}
+function updatePower(elapsed, dt) {
+    if (!powerBall && !powerTaken && powerTimes.length && elapsed >= powerTimes[0]) {
+        powerTimes.shift();
+        const bx = cx - radius + Math.random() * 2 * radius;      // vain kehän leveyden alueelta
+        powerBall = { bx, x: bx, y: -POWER_R, ph: Math.random() * Math.PI * 2 };
+        playSound("powerSpawn");
+        redBoostLeft = RED_BOOST_MS;                        // punainen havaitsee pallon
+        if (!ball4.eaten && !ball4.inside && !ball4.passing) ball4.flash = 20;
+    }
+    if (!powerBall) return;
+    powerBall.y += POWER_SPEED * dt;
+    powerBall.x = Math.max(cx - radius, Math.min(cx + radius, powerBall.bx + Math.sin(powerBall.y * 0.03 + powerBall.ph) * 16)); // hienoinen heilunta
+    if (powerBall.y > 700 + POWER_R) { powerBall = null; return; }                    // valui alareunasta ulos
+    for (const b of balls) {
+        if (b.eaten || b.sealing || b.escaped) continue;
+        if (Math.hypot(b.x - powerBall.x, b.y - powerBall.y) < b.r + POWER_R) {
+            givePower(b);
+            powerBall = null; powerTaken = true;                                      // uutta supervoimapalloa ei enää tule
+            playSound("power");
+            return;
+        }
+    }
+}
+function drawPowerBall() {
+    const hue = (animT / 5) % 360, col = "hsl(" + hue + ",100%,65%)";
+    ctx.shadowColor = col; ctx.shadowBlur = 26;
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath(); ctx.arc(powerBall.x, powerBall.y, POWER_R, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(powerBall.x, powerBall.y, POWER_R + 3, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+}
+function drawPowerRing(b) {   // supervoiman merkki: kiertävä sateenkaarireunus
+    const col = "hsl(" + ((animT / 5) % 360) + ",100%,62%)";
+    ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.shadowColor = col; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 3.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+}
 
+// ---------- Aikaan sidottu simulaatio ----------
+// Peli etenee kiinteällä 60 askeleen sekuntivauhdilla ruudunpäivityksen nopeudesta riippumatta:
+// hidas tai nykivä päivitys (esim. puhelimen alkuhetket) ei hidasta peliä eikä nopea näyttö kiihdytä sitä.
+const STEP_MS = 1000 / 60, MAX_CATCHUP = 5;
+let acc = 0;
+function simStep(dt) {
     if (!gameOver) {
         if (!finale) timeLeft -= dt;
         if (pauseLeft > 0) pauseLeft -= dt;
         timeScale += ((finale ? FINALE_SLOW : 1) - timeScale) * 0.12;
+        if (!finale) updatePower(GAME_MS - timeLeft, dt);
+        if (redBoostLeft > 0) redBoostLeft -= dt;
         // pyöriminen hidastuu ja kiihtyy pehmeästi
         rotSpeed += ((pauseLeft > 0 ? 0 : rotationSpeed) - rotSpeed) * 0.12;
         rotation += rotSpeed * timeScale;
+        if (spinLeft > 0.0005) {                       // nopea pyöräytys: jyrkkä alku, pehmeä loppu
+            const step = Math.min(spinLeft, Math.max(0.002, spinLeft * 0.14));
+            rotation += step; spinLeft -= step;
+        } else spinLeft = 0;
         updateTimer();
 
         for(let i=0;i<4;i++) {
@@ -823,6 +955,7 @@ function animate(ts) {
                     const rd = a.red ? a : b, ot = a.red ? b : a;
                     // oranssi syö kehän sisällä myös punaisen; muut vain kimpoittavat sen
                     if(ot.orange && ot.inside && !ot.passing && rd.inside && !rd.passing && Math.hypot(rd.x-ot.x, rd.y-ot.y) < rd.r+ot.r) eat(ot, rd);
+                    else if(rd.power === "red") bounceOffHeavy(rd, ot);   // superpainava punainen: muut kimpoavat siitä
                     else knockRed(rd, ot);
                     continue;
                 }
@@ -870,15 +1003,21 @@ function animate(ts) {
     if (finale) { const f = focusPoint(finale.winner); tx = f.x; ty = f.y; zt = FINALE_ZOOM; }
     zoom += (zt - zoom) * 0.06; camX += (tx - camX) * 0.08; camY += (ty - camY) * 0.08;
 
+    // Jälkivanat ja renkaat päivittyvät simulaatioaskeleella, ei ruudunpäivityksellä
+    if (!gameOver) {
+        for (const b of balls) {
+            b.trail.push({x:b.x,y:b.y});
+            if (b.trail.length > TRAIL_LEN) b.trail.shift();
+            if (b.flash > 0) b.flash--;
+        }
+    }
+}
+function draw() {
     ctx.clearRect(0,0,700,700);
     ctx.save();
     ctx.translate(350,350); ctx.scale(zoom,zoom); ctx.translate(-camX,-camY);
     drawCircle();
     for(const b of balls) {
-        if(!gameOver) {
-            b.trail.push({x:b.x,y:b.y});
-            if(b.trail.length>TRAIL_LEN) b.trail.shift();
-        }
         drawTrail(b);
         let rr = b.r;
         if(b.sealing) {
@@ -892,13 +1031,14 @@ function animate(ts) {
         ctx.beginPath(); ctx.arc(b.x,b.y,rr,0,Math.PI*2);
         ctx.fillStyle=b.color; ctx.shadowColor=b.color; ctx.shadowBlur=22;
         ctx.fill(); ctx.shadowBlur=0;
+        if(b.power) drawPowerRing(b);
         if(b.flash>0) { // buustin rengas
             ctx.strokeStyle="#ffffff"; ctx.globalAlpha=b.flash/20; ctx.lineWidth=2;
             ctx.beginPath(); ctx.arc(b.x,b.y,b.r+(20-b.flash)*0.9+2,0,Math.PI*2); ctx.stroke();
             ctx.globalAlpha=1;
-            if(!gameOver) b.flash--;
         }
     }
+    if (powerBall) drawPowerBall();
     if (explosion) drawExplosion();
     ctx.restore();
     // Vinjetti tummentaa reunat zoomauksen aikana
@@ -909,6 +1049,18 @@ function animate(ts) {
         gr.addColorStop(1, "rgba(5,8,23," + (0.6 * zp) + ")");
         ctx.fillStyle = gr; ctx.fillRect(0, 0, 700, 700);
     }
+}
+function animate(ts) {
+    animT = ts;
+    if (lastTs === null) lastTs = ts - STEP_MS;   // ensimmäinen ruutu ajaa yhden askeleen
+    acc += Math.min(100, ts - lastTs); lastTs = ts;
+    let n = 0;
+    while (acc >= STEP_MS - 1) {              // 1 ms toleranssi, ettei 60 Hz:n pieni heitto aiheuta nykimistä
+        simStep(STEP_MS);
+        acc = Math.max(0, acc - STEP_MS);
+        if (++n >= MAX_CATCHUP) { acc = 0; break; }  // jos laite on liian hidas, peli hidastuu eikä jää jälkeen
+    }
+    draw();
     requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
